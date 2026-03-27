@@ -5,12 +5,13 @@ const VerifyLoginUser = async (req, res, next) => {
 };
 const addUsers = async (req, res) => {
     try {
-        console.log(req.body)
-        const res = await userScheme.create(req.body)
-        res.json({ message: res })
+        // console.log(req.body)
+        const user = await userScheme.create(req.body)
+        // console.log(user)
+       res.status(200).json({message:user, success: true});
         // res.status(500).json({ message: "account is creating ", success: true });
     } catch (error) {
-        res.json(error)
+        res.status(500).json({ message: error.message })
 
     }
 }

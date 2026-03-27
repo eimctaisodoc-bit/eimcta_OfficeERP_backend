@@ -6,9 +6,15 @@ const LoginSchema = new mongoose.Schema({
     role: { type: String, enum: ['admin', 'staff', 'client'], default: 'admin' },
     officeEmail: { type: String, required: true, unique: true },
     officeMobile: { type: String, required: true, unique: true },
-    designation: { type: String, required: true, },
+    personalEmail: { type: String, required: true, unique: true },
+    personalMobile: { type: String, required: true, unique: true },
+    designation: { type: String, required: true, },  
+    jobRole: { type: String, required: true, },  
+   
+    accountCreated: { type: Date, default: Date.now },
+    
     isOnline: { type: Boolean, default: false },
     lastSeen: { type: Date, default: null },
     socketId: { type: String, default: null }
 });
-module.exports = mongoose.model('LoginSchema', LoginSchema);
+module.exports = mongoose.model('logins', LoginSchema);

@@ -7,5 +7,6 @@ router.use((req, res, next) => {
 });
 router.use('/report',require('./admin.dashboard'))
 router.use('/recruitment',require('./admin.recruitment'))
+// router.use('/sales',require('./admin.sales'))
 
 module.exports = router

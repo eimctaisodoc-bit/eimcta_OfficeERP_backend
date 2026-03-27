@@ -7,4 +7,6 @@ router.use((req, res, next) => {
     next();
 
 });
+router.use('/sales',require('./staff.sales.js'));
+// router.use('report',require('./sales/sales.index'));
 module.exports=router

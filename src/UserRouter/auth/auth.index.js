@@ -1,6 +1,7 @@
 const express = require("express");
 const { generateToken } = require("../../middleware/tokengerate");
 const verifyToken = require("../../middleware/authmiddleware");
+const UserSchema = require("../../Usersmodel/UserSchema");
 const router = express.Router();
 
 const users = [
@@ -10,30 +11,36 @@ const users = [
 ];
 
 // LOGIN
-router.post("/login", (req, res) => {
-  const { username, password, role } = req.body;
-  
-  const user = users.find((u) => u.username === username);
-  if (!user || user.password !== password || user.role !== role)
-    return res.status(401).json({ message: "Invalid credentials" });
+router.post("/login", async (req, res) => {
+  // console.log("Login attempt:", req.body);
+  try {
+    const { username, password, role } = req.body;
+    console.log(UserSchema.collection.collectionName)
+    const user = await UserSchema.findOne({ username, role });
+    if (!user || user.password !== password)
+      return res.status(401).json({ message: "Invalid credentials" });
 
-  const token = generateToken({
-    id: user.id,
-    username: user.username,
-    role: user.role,
-  });
 
-  res.cookie("token__", token, {
-    httpOnly: true,   // ✅ prevents JS from reading it   // ✅ only HTTPS in production
-    sameSite: "lax",
-    secure: false,
-    maxAge: 8 * 60 * 60 * 1000
-  });
+    const token = generateToken({ id: user.id, username: user.username, role: user.role, });
 
-  res.json({
-    user: { id: user.id, username: user.username, role: user.role, token },
-  });
+    res.cookie("token__", token, { httpOnly: true, maxAge: 8 * 60 * 60 * 1000 });
+    res.json({ user: { id: user._id, username: user.username, role: user.role, token } });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 });
+
+// router.get("/login", async (req, res) => {
+//   console.log("Login attempt:", req.body);
+//   try {
+//     const { username, password, role } = req.body;
+
+//     const user = await UserSchema.find({});
+//    res.json(user)
+//   } catch (err) {
+//     res.status(500).json({ message: err.message });
+//   }
+// });
 
 // 🔐 ME
 router.get("/me", verifyToken, (req, res) => {

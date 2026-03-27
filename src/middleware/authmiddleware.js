@@ -11,7 +11,7 @@ const verifyToken = (req, res, next) => {
   }
   try {
     const decoded = verifyTokenJWT(token);
-    req.user = decoded;
+    req.user = {decoded,token};
 
     // console.log("User:", req.user);
     next();
