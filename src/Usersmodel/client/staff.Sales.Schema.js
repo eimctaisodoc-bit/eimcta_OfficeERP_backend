@@ -1,148 +1,265 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-// Follow-up history (common for all stages)
-const FollowUpSchema = new mongoose.Schema({
-  date: { type: Date },
-  callType: { type: String },
-  messages: { type: String },
-  doneBy: { type: String },
-  remarks: { type: String },
-  reSchedule: { type: Date, default: null }
-}, { _id: false });
 
-// --- Stage 1: Lead Generation ---
-const Stage1Schema = new mongoose.Schema({
-  leadId: { type: String, required: true },
-  stageName: { type: String, default: "Lead Generation" },
-  active: { type: Boolean, default: true },
-  currentStage: { type: Number, default: 1 },
-  nextStage: { type: Number, default: 2 },
-  next: { type: Boolean, default: false },
-  isClose: { type: Boolean, default: false },
-  stageEnteredAt: { type: Date },
-  followUpRequired: { type: Boolean, default: false },
-  followUpHistory: [FollowUpSchema],
-  notification: [{ type: String }],
-  status: { type: String, enum: ['active','inactive'], default: 'active' }
-}, { _id: false });
 
-// --- Stage 2: Proposal & Commitment ---
-const ProposalSharingSchema = new mongoose.Schema({
-  sentVia: [{ type: String }], // ["whatsapp","email"]
-  sentAt: { type: Date },
-  remarks: { type: String }
-}, { _id: false });
+// -----------------------------
+// Stage 1 Sub Schemas
+// -----------------------------
+const CallDetailSchema = new mongoose.Schema(
+  {
+    by: { type: String, trim: true },
+    type: {
+      type: String,
+      trim: true
+    },
+    callDuration: { type: Number, default: 0 },
+    dateTime: { type: Date },
+    note: { type: String, trim: true },
+  },
+  { _id: true }
+);
 
-const ClientMeetingSchema = new mongoose.Schema({
-  meetingType: { type: String }, // "virtual" or "physical"
-  scheduledAt: { type: Date },
-  conductedAt: { type: Date, default: null },
-  attendees: [{ type: String }],
-  remarks: { type: String }
-}, { _id: false });
+const MessageDetailSchema = new mongoose.Schema(
+  {
+    by: { type: String, trim: true },
+    type: {
+      type: String,
+      trim: true
+    },
+    dateTime: { type: Date },
+    note: { type: String, trim: true },
+  },
+  { _id: true }
+);
 
-const InitialCommitmentSchema = new mongoose.Schema({
-  commitmentStatus: { type: String }, // "pending","confirmed","rejected"
-  remarks: { type: String }
-}, { _id: false });
+const ScheduleSchema = new mongoose.Schema(
+  {
+    fromDate: { type: Date },
+    toDate: { type: Date },
+    scheduleNote: { type: String, trim: true },
+    by: { type: String, trim: true },
+    status: { type: String },
+    createdAt: { type: Date, default: Date.now }
+  },
+  { _id: true }
+);
 
-const Stage2Schema = new mongoose.Schema({
-  leadId: { type: String, required: true },
-  stageName: { type: String, default: "Proposal & Commitment" },
-  active: { type: Boolean, default: false },
-  currentStage: { type: Number, default: 2 },
-  nextStage: { type: Number, default: 3 },
-  next: { type: Boolean, default: false },
-  isClose: { type: Boolean, default: false },
-  stageEnteredAt: { type: Date },
-  proposalSharing: ProposalSharingSchema,
-  clientMeeting: ClientMeetingSchema,
-  initialCommitment: InitialCommitmentSchema,
-  followUpRequired: { type: Boolean, default: false },
-  followUpHistory: [FollowUpSchema],
-  notification: [{ type: String }],
-  status: { type: String, enum: ['active','inactive'], default: 'active' }
-}, { _id: false });
+const Stage1Schema = new mongoose.Schema(
+  {
+    leadId: { type: String },
+    isFilled: { type: Boolean, default: false },
+    currentStage: { type: Number, default: 1 },
+    nextStage: { type: Number, default: 2 },
+    active: { type: Boolean, default: true },
+    GeneralDetails: {
+      status: {
+        type: String,
+      },
+      callDetails: {
+        type: [CallDetailSchema],
+        default: [],
+      },
+      messageDetails: {
+        type: [MessageDetailSchema],
+        default: [],
+      },
 
-// --- Stage 3: Closure / Contract Signed ---
-const Stage3Schema = new mongoose.Schema({
-  leadId: { type: String, required: true },
-  stageName: { type: String, default: "Closure / Contract Signed" },
-  active: { type: Boolean, default: false },
-  currentStage: { type: Number, default: 3 },
-  isClose: { type: Boolean, default: true },
-  stageEnteredAt: { type: Date },
-  contractSignedAt: { type: Date },
-  signedBy: { type: String },
-  remarks: { type: String },
-  followUpRequired: { type: Boolean, default: false },
-  followUpHistory: [FollowUpSchema],
-  notification: [{ type: String }],
-  status: { type: String, enum: ['active','inactive'], default: 'active' }
-}, { _id: false });
+    },
 
-// --- Organization & Lead Info ---
-const ContactPersonSchema = new mongoose.Schema({
-  contactFullName: { type: String },
-  contactRole: { type: String },
-  contactNumber: { type: String },
-  contactEmail: { type: String }
-}, { _id: false });
+    notification: {
+      type: [String],
+      default: [],
+    },
 
-const OrganizationSchema = new mongoose.Schema({
-  organizationName: { type: String },
-  registrationNumber: { type: String },
-  vatPanNumber: { type: String },
-  organizationAddress: { type: String },
-  serviceStandards: { type: String },
-  totalEmployees: { type: Number },
-  educators: { type: Number },
-  contactPerson: ContactPersonSchema,
-  ExpectedBudget: { type: Number },
-  fbProfiele: { type: String },
-  linkedinProfile: { type: String },
-  ytubeProfile: { type: String },
-  isPayment: { type: Boolean },
-  payment: { type: Number },
-  paymentLeft: { type: Number }
-}, { _id: false });
 
-const LeadInfoSchema = new mongoose.Schema({
-  leadId: { type: String, required: true },
+    cancelDetails: [{
+      status: {
+        type: String
+      },
+
+      cancelNote: {
+        type: String,
+        trim: true,
+        default: "",
+      },
+    }],
+
+    schedules: { type: [ScheduleSchema], default: [] }
+  },
+  { _id: true }
+);
+const Stage5Schema = new mongoose.Schema(
+  {
+    leadInfo: {
+      type: Array,
+      default: [],
+    },
+
+    organizationName: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    organizationType: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    industryType: {
+      type: [String],
+      default: [],
+    },
+
+    registrationNumber: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    vatPan: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    address: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    totalEmployeesOrLearners: {
+      type: Number,
+      default: null,
+    },
+
+    totalEducators: {
+      type: Number,
+      default: null,
+    },
+
+    contactPersonName: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    contactPersonRole: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    contactPersonNumber: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    contactPersonEmail: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      default: "",
+    },
+
+    discounted: {
+      type: Number,
+      default: 0,
+    },
+
+    installments: {
+      type: Array,
+      default: [],
+    },
+  },
+  {
+    _id: true,
+    timestamps: true,
+  }
+);
+
+const OrganizationDetailsSchema = new mongoose.Schema(
+  {
+    organizationName: { type: String },
+    organizationType: { type: String },
+    industyType: { type: [String] },
+    registrationNumber: { type: String },
+    vatPan: { type: String },
+    address: { type: String },
+    totalEmp_learners: { type: Number },
+    totalEducator: { type: Number },
+    contactPersonName: { type: String },
+    role: { type: [String] },
+    contactPersonNumber: { type: String },
+    contactPersonEmail: { type: String },
+  }, { _id: true, timestamps: true }
+);
+const LeadDetailsSchema = new mongoose.Schema({
   leadType: { type: String },
   leadSource: { type: String },
   leadChannel: { type: String },
-  leadOwner: { type: String },
-  leadTakenBy: { type: String },
-  leadTakenAt: { type: Date },
-  leadStatus: { type: String },
-  isoStandards: [{ type: String }],
-  isoServices: [{ type: String }],
-  notes: { type: String },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
-}, { _id: false });
-
-// --- Pipeline Info ---
-const PipelineInfoSchema = new mongoose.Schema({
-  pipelineName: { type: String, required: true },
-  organization: [OrganizationSchema],
-  leadInfo: [LeadInfoSchema],
-  stages: {
-    Stage1: [Stage1Schema],
-    Stage2: [Stage2Schema],
-    Stage3: [Stage3Schema]
-  }
-}, { timestamps: true });
-
-// --- Sale Wrapper ---
-const SaleSchema = new mongoose.Schema({
-  branch: { type: String },
+  campaignName: { type: String },
+  ProductInterested: { type: [String] },
+  branch: { type: String, },
+  province: { type: Number },
   salesManager: { type: String },
   salesManagerId: { type: String },
-  date: { type: Date },
-  time: { type: String },
-  details: [PipelineInfoSchema]
-}, { timestamps: true });
+  note_comments: { type: String },
+}, { _id: true, timestamps: true });
 
-module.exports = mongoose.model('salespipelines', SaleSchema);
+const PipelineInfoSchema = new mongoose.Schema(
+  {
+    pipelineName: { type: String },
+    stages: {
+      Stage1: {
+        type: [Stage1Schema],
+        default: [],
+        currentStage: 1, nextStage: 2, active: true,
+      },
+      Stage2: {
+        type: [Stage1Schema],
+        default: [],
+        currentStage: 2, nextStage: 3, active: false
+      },
+      Stage3: {
+        type: [Stage1Schema],
+        default: [],
+        currentStage: 3, nextStage: 4, active: false
+      },
+      Stage4: {
+        type: [Stage1Schema],
+        default: [],
+        currentStage: 4, nextStage: 5, active: false
+      },
+      
+      Stage5: {
+        type: [Stage5Schema],
+        default: [],
+        currentStage: 5, nextStage: 6, active: false
+      },
+
+
+    },
+
+  },
+  { _id: true, timestamps: true },
+);
+
+// -----------------------------
+// Main Sale Schema
+// -----------------------------
+const SaleSchema = new mongoose.Schema(
+  {
+    organizationDetails: [OrganizationDetailsSchema],
+    leadDetails: [LeadDetailsSchema],
+    details: [PipelineInfoSchema],
+
+    handleBranch: { type: Number },
+  },
+  { timestamps: true }
+);
+
+module.exports = mongoose.model("salespipelines", SaleSchema);
